@@ -48,12 +48,53 @@ module.exports.updateUser = async (req, res) => {
 
 //delete User
 module.exports.deleteUser = async (req, res) => {
-    if (!ObjectID.isValid(req.params.id))
+  if (!ObjectID.isValid(req.params.id))
     return res.status(400).send("ID not found : " + req.params.id);
-    try {
-        await UserModel.remove({_id: req.params.id}).exec();
-        res.status(200).json({ message: 'User deleted successfully' });
-    } catch (err) {
-        return res.status(500).json({ message: err });
-    }
-}
+  try {
+    await UserModel.remove({ _id: req.params.id }).exec();
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (err) {
+    return res.status(500).json({ message: err });
+  }
+};
+
+module.exports.follow = async (req, res) => {
+  if (!ObjectID.isValid(req.params.id))
+    return res.status(400).send("ID not found : " + req.params.id);
+  try {
+    //ajouter a la liste de follower
+    await UserModel.findByIdAndUpdate(
+      res.params.id,
+      {
+        $addToSet: { following: req.body.idToFollow },
+      },
+      { new: true, upsert: true },
+      (err, docs) => {
+        
+        if(err) return res.status(400).json(err);
+      }
+    );
+    //ajouter a la liste de following
+
+    await UserModel.findByIdAndUpdate(
+      req.body.idToFollow,
+      { $addToSet: { followers: req.params.id } },
+      { new: true, upsert: true },
+      (err, docs) => {
+        if (!err) return res.status(201).json(docs);
+        else return res.status(400).json(err);
+      }
+    );
+  } catch (err) {
+    return res.status(500).json({ message: err });
+  }
+};
+
+module.exports.unfollow = async (req, res) => {
+  if (!ObjectID.isValid(req.params.id))
+    return res.status(400).send("ID not found : " + req.params.id);
+  try {
+  } catch (err) {
+    return res.status(500).json({ message: err });
+  }
+};
